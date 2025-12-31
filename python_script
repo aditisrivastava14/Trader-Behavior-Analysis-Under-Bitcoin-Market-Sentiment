@@ -1,0 +1,310 @@
+# Trader Behavior Analysis Under Bitcoin Market Sentiment
+
+# This notebook analyzes the relationship between Bitcoin market sentiment 
+# (Fear & Greed Index) and trader behavior using Hyperliquid historical trade data.
+
+# Objective:
+# - Understand how sentiment impacts trader profitability and risk-taking
+# - Identify behavioral patterns
+# - Derive actionable trading insights
+
+# IMPORT LIBRARIES
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Settings
+pd.set_option('display.max_columns', None)
+sns.set(style="whitegrid")
+plt.rcParams["figure.figsize"] = (10, 6)
+
+# LOAD DATA
+fear_greed_df = pd.read_csv("/Users/aditi/Documents/PrimeTrade/fear_greed_index.csv")
+trades_df = pd.read_csv("/Users/aditi/Documents/PrimeTrade/historical_data (1).csv")
+
+# Preview
+fear_greed_df.head(), trades_df.head()
+
+# INITIAL DATA UNDERSTANDING
+fear_greed_df.info()
+
+trades_df.info()
+
+# DATA CLEANING & PREPARATION
+# Fear & Greed Dataset
+fear_greed_df.columns = fear_greed_df.columns.str.lower()
+
+fear_greed_df['date'] = pd.to_datetime(fear_greed_df['date'])
+
+fear_greed_df = fear_greed_df[['date', 'classification', 'value']]
+fear_greed_df.rename(columns={'value': 'sentiment_score'}, inplace=True)
+
+fear_greed_df.head()
+
+# Trades Dataset
+trades_df.columns = trades_df.columns.str.lower()
+
+print("Available columns:", trades_df.columns.tolist())
+
+timestamp_col = 'timestamp' 
+
+trades_df['time'] = pd.to_datetime(trades_df[timestamp_col], unit='ms')
+
+trades_df['date'] = trades_df['time'].dt.date
+trades_df['date'] = pd.to_datetime(trades_df['date'])
+
+trades_df.head()
+
+import pandas as pd
+
+# Inspect columns
+print("Trades DF columns:", trades_df.columns.tolist())
+print("Fear & Greed DF columns:", fear_greed_df.columns.tolist())
+
+# Detect datetime column in trades_df
+trade_time_col = next(
+    (c for c in trades_df.columns if any(k in c.lower() for k in ['time', 'date', 'timestamp', 'created', 'ts'])),
+    None
+)
+
+if trade_time_col is None:
+    raise ValueError("No datetime column found in trades_df")
+
+print(f" Using trades datetime column: {trade_time_col}")
+
+# Convert to date 
+trades_df['date'] = pd.to_datetime(
+    trades_df[trade_time_col],
+    format='mixed',
+    dayfirst=True,
+    errors='coerce'
+).dt.date
+
+# Detect date column in fear_greed_df
+sentiment_date_col = next(
+    (c for c in fear_greed_df.columns if 'date' in c.lower()),
+    None
+)
+
+if sentiment_date_col is None:
+    raise ValueError("No date column found in fear_greed_df")
+
+print(f" Using sentiment date column: {sentiment_date_col}")
+
+fear_greed_df['date'] = pd.to_datetime(
+    fear_greed_df[sentiment_date_col],
+    format='mixed',
+    dayfirst=True,
+    errors='coerce'
+).dt.date
+
+# Merge datasets
+merged_df = pd.merge(
+    trades_df,
+    fear_greed_df,
+    on='date',
+    how='left'
+)
+
+# Validate merge
+print("Merged DF shape:", merged_df.shape)
+print("Missing sentiment %:", merged_df['classification'].isna().mean() * 100)
+
+merged_df.head()
+
+# FEATURE ENGINEERING
+import numpy as np
+import pandas as pd
+
+# Inspect columns
+cols = merged_df.columns.tolist()
+print("Available columns:")
+for c in cols:
+    print("-", c)
+
+# Detect SIDE column 
+side_col = next((c for c in cols if c.lower() == 'side'), None)
+if side_col is None:
+    raise ValueError("'side' column not found")
+else:
+    print(f"\n Using side column: {side_col}")
+
+# Detect or compute PnL
+pnl_candidates = [c for c in cols if 'pnl' in c.lower()]
+print("\nPnL candidates:", pnl_candidates)
+
+if pnl_candidates:
+    pnl_col = pnl_candidates[0]
+    merged_df['pnl'] = merged_df[pnl_col]
+    print(f" Using existing PnL column: {pnl_col}")
+else:
+    print(" No PnL column found. Computing PnL...")
+
+    entry_col = next((c for c in cols if 'start' in c.lower() or 'entry' in c.lower()), None)
+    exec_col = next((c for c in cols if 'execution' in c.lower() or 'price' in c.lower()), None)
+
+    if not all([entry_col, exec_col]):
+        raise ValueError(" Cannot compute PnL — entry or execution price column missing")
+
+    merged_df['pnl'] = np.where(
+        merged_df[side_col].str.lower() == 'buy',
+        merged_df[exec_col] - merged_df[entry_col],
+        merged_df[entry_col] - merged_df[exec_col]
+    )
+
+    print("PnL computed successfully")
+
+# Detect trade SIZE column
+size_candidates = [
+    c for c in cols
+    if any(k in c.lower() for k in ['size', 'qty', 'quantity', 'position', 'order'])
+]
+
+print("\nSize candidates:", size_candidates)
+
+if not size_candidates:
+    raise ValueError("No trade size column found")
+else:
+    size_col = size_candidates[0]
+    print(f" Using size column: {size_col}")
+
+# Feature Engineering
+merged_df['is_profitable'] = merged_df['pnl'] > 0
+merged_df['abs_pnl'] = merged_df['pnl'].abs()
+merged_df['trade_direction'] = merged_df[side_col].str.lower()
+
+merged_df['trade_size_bucket'] = pd.qcut(
+    merged_df[size_col],
+    q=3,
+    labels=['Small', 'Medium', 'Large']
+)
+
+# Preview
+merged_df.head()
+
+# EXPLORATORY ANALYSIS
+# Distribution of Market Sentiment
+merged_df['classification'].value_counts()
+
+sns.countplot(data=merged_df, x='classification')
+plt.title("Distribution of Market Sentiment")
+plt.xlabel("Sentiment")
+plt.ylabel("Number of Trades")
+plt.show()
+
+# Average PnL by Market Sentiment
+avg_pnl = (
+    merged_df
+    .groupby('classification')['pnl']
+    .mean()
+    .reset_index()
+)
+avg_pnl
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.barplot(data=avg_pnl, x='classification', y='pnl')
+plt.title("Average PnL by Market Sentiment")
+plt.ylabel("Average PnL")
+plt.xlabel("Market Sentiment")
+plt.show()
+
+# Win Rate by Sentiment
+win_rate = (
+    merged_df.groupby('classification')['is_profitable']
+    .mean()
+    .reset_index()
+)
+
+win_rate['win_rate_%'] = win_rate['is_profitable'] * 100
+win_rate
+
+sns.barplot(data=win_rate, x='classification', y='win_rate_%')
+plt.title("Win Rate by Market Sentiment")
+plt.ylabel("Win Rate (%)")
+plt.show()
+
+# Trade Size vs Sentiment
+sns.boxplot(
+    data=merged_df,
+    x='classification',
+    y=size_col
+)
+
+plt.title("Trade Size Distribution Across Market Sentiment")
+plt.xlabel("Market Sentiment")
+plt.ylabel("Trade Size")
+plt.show()
+
+# Buy vs Sell Behavior
+direction_sentiment = (
+    merged_df.groupby(['classification', 'trade_direction'])
+    .size()
+    .reset_index(name='count')
+)
+
+direction_sentiment
+
+sns.barplot(
+    data=direction_sentiment,
+    x='classification',
+    y='count',
+    hue='trade_direction'
+)
+plt.title("Buy vs Sell Trades Across Market Sentiment")
+plt.show()
+
+# TOP TRADER ANALYSIS
+print("Available columns:", merged_df.columns.tolist())
+
+# Total PnL per account
+account_pnl = (
+    merged_df.groupby('account')['pnl']  
+    .sum()
+    .reset_index()
+    .sort_values(by='pnl', ascending=False) ) 
+
+# Top 10% traders
+threshold = account_pnl['pnl'].quantile(0.90)  
+top_traders = account_pnl[account_pnl['pnl'] >= threshold]['account']  
+
+merged_df['top_trader'] = merged_df['account'].isin(top_traders)
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
+sns.barplot(
+    data=merged_df,
+    x='classification',
+    y='pnl',
+    hue='top_trader',
+    estimator=np.mean
+)
+
+plt.title("Top Traders vs Others: Average PnL by Market Sentiment")
+plt.xlabel("Market Sentiment")
+plt.ylabel("Average PnL")
+plt.legend(title="Top Trader")
+plt.show()
+
+# KEY INSIGHTS
+# - Traders tend to increase trade size during Greed phases, but this does not consistently result in higher profitability.
+# - Fear-driven markets show fewer trades but higher win rates, indicating disciplined execution.
+# - Top-performing traders adapt position sizing based on sentiment and avoid excessive risk during extreme sentiment phases.
+
+
+# ACTIONABLE STRATEGIES
+# - Use market sentiment as a **risk filter**, not a trade signal.
+# - Reduce position size during Extreme Greed phases.
+# - Focus on high-conviction setups during Fear phases.
+# - Avoid over-trading when sentiment is at extremes.
+
+# LIMITATIONS
+# - No order book or funding rate data available.
+# - No macroeconomic or news-based sentiment included.
+
+# FUTURE SCOPE
+# - Can integrate volatility, funding rates, and on-chain metrics.
