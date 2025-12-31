@@ -1,7 +1,7 @@
 # Trader Behavior Analysis Under Bitcoin Market Sentiment
 
 ## Overview
-This project analyzes how **Bitcoin market sentiment (Fear & Greed Index)** influences **trader behavior, risk-taking, and profitability** using historical trading data from **Hyperliquid**.
+This project analyzes how **Bitcoin market sentiment (Fear & Greed Index)** influences **trader behavior, risk-taking and profitability** using historical trading data from **Hyperliquid**.
 
 The objective is to uncover behavioral patterns that can help improve **trading strategies and risk management decisions** in crypto markets.
 
