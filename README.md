@@ -52,7 +52,7 @@ This analysis was completed **entirely in Python using Jupyter Notebook**.
 
 ##  Key Insights
 - Traders tend to increase trade size during **Greed** phases, but this does not consistently lead to higher profitability.
-- Fear-driven markets** show fewer trades but higher win rates, indicating more disciplined execution.
+- **Fear-driven markets** show fewer trades but higher win rates, indicating more disciplined execution.
 - Top-performing traders** adapt position sizing based on sentiment and avoid excessive risk during extreme market emotions.
 
 
