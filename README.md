@@ -91,6 +91,5 @@ This analysis was completed **entirely in Python using Jupyter Notebook**.
 **Aditi**    
 Dayananda Sagar College of Engineering   
 Data Analyst Intern  
-
-
+**Linkedin** : www.linkedin.com/in/aditisrivastava14
 
