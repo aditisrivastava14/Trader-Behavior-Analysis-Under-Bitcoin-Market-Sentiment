@@ -1,12 +1,12 @@
 # Trader Behavior Analysis Under Bitcoin Market Sentiment
 
-# This notebook analyzes the relationship between Bitcoin market sentiment 
-# (Fear & Greed Index) and trader behavior using Hyperliquid historical trade data.
+This notebook analyzes the relationship between Bitcoin market sentiment 
+(Fear & Greed Index) and trader behavior using Hyperliquid historical trade data.
 
 # Objective:
-# - Understand how sentiment impacts trader profitability and risk-taking
-# - Identify behavioral patterns
-# - Derive actionable trading insights
+- Understand how sentiment impacts trader profitability and risk-taking
+- Identify behavioral patterns
+- Derive actionable trading insights
 
 # IMPORT LIBRARIES
 import pandas as pd
@@ -130,7 +130,7 @@ if side_col is None:
 else:
     print(f"\n Using side column: {side_col}")
 
-# Detect or compute PnL
+# Detect or compute P&L
 pnl_candidates = [c for c in cols if 'pnl' in c.lower()]
 print("\nPnL candidates:", pnl_candidates)
 
@@ -193,7 +193,7 @@ plt.xlabel("Sentiment")
 plt.ylabel("Number of Trades")
 plt.show()
 
-# Average PnL by Market Sentiment
+# Average P&L by Market Sentiment
 avg_pnl = (
     merged_df
     .groupby('classification')['pnl']
@@ -259,7 +259,7 @@ plt.show()
 # TOP TRADER ANALYSIS
 print("Available columns:", merged_df.columns.tolist())
 
-# Total PnL per account
+# Total P&L per account
 account_pnl = (
     merged_df.groupby('account')['pnl']  
     .sum()
@@ -291,20 +291,20 @@ plt.legend(title="Top Trader")
 plt.show()
 
 # KEY INSIGHTS
-# - Traders tend to increase trade size during Greed phases, but this does not consistently result in higher profitability.
-# - Fear-driven markets show fewer trades but higher win rates, indicating disciplined execution.
-# - Top-performing traders adapt position sizing based on sentiment and avoid excessive risk during extreme sentiment phases.
+- Traders tend to increase trade size during Greed phases, but this does not consistently result in higher profitability.
+- Fear-driven markets show fewer trades but higher win rates, indicating disciplined execution.
+- Top-performing traders adapt position sizing based on sentiment and avoid excessive risk during extreme sentiment phases.
 
 
 # ACTIONABLE STRATEGIES
-# - Use market sentiment as a **risk filter**, not a trade signal.
-# - Reduce position size during Extreme Greed phases.
-# - Focus on high-conviction setups during Fear phases.
-# - Avoid over-trading when sentiment is at extremes.
+- Use market sentiment as a **risk filter**, not a trade signal.
+- Reduce position size during Extreme Greed phases.
+- Focus on high-conviction setups during Fear phases.
+- Avoid over-trading when sentiment is at extremes.
 
 # LIMITATIONS
-# - No order book or funding rate data available.
-# - No macroeconomic or news-based sentiment included.
+- No order book or funding rate data available.
+- No macroeconomic or news-based sentiment included.
 
 # FUTURE SCOPE
-# - Can integrate volatility, funding rates, and on-chain metrics.
+- Can integrate volatility, funding rates, and on-chain metrics.
