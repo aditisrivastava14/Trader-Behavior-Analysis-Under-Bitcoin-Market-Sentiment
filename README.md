@@ -90,6 +90,6 @@ This analysis was completed **entirely in Python using Jupyter Notebook**.
 ##  Author
 **Aditi**    
 Dayananda Sagar College of Engineering, Bengaluru   
-Data Analyst Intern  
+Data Analytics Intern  
 **Linkedin** : www.linkedin.com/in/aditisrivastava14
 
