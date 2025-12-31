@@ -89,7 +89,7 @@ This analysis was completed **entirely in Python using Jupyter Notebook**.
 
 ##  Author
 **Aditi**    
-Dayananda Sagar College of Engineering   
+Dayananda Sagar College of Engineering, Bengaluru   
 Data Analyst Intern  
 **Linkedin** : www.linkedin.com/in/aditisrivastava14
 
